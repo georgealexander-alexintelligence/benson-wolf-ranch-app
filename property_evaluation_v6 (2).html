@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Benson's Wolf Ranch Rankings — Interactive</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0B0F15; --surf:#131920; --bdr:rgba(255,255,255,.07);
+  --gold:#D4A94C; --goldA:rgba(212,169,76,.12);
+  --cream:#DDE6F0; --muted:#B8C4D0;
+  --view:#38BDF8; --fire:#FB923C; --lvl:#A78BFA;
+  --ceil:#34D399; --kit:#FBBF24; --bath:#F472B6;
+  --price:#4ADE80; --red:#F87171; --blue:#60A5FA;
+  --warn:#F59E0B;
+}
+*,*::before,*::after { box-sizing:border-box }
+body { background:var(--bg); font-family:'Manrope',sans-serif; color:var(--cream); min-height:100vh }
+
+/* HERO */
+.hero { background:linear-gradient(155deg,#0B0F15 0%,#0E1D30 55%,#0B0F15 100%);
+        border-bottom:1px solid var(--bdr); padding:1.5rem 0 1.2rem }
+.htitle { font-family:'Libre Baskerville',serif; font-size:1.9rem; font-weight:700; line-height:1.15 }
+.htitle em { font-style:italic; color:var(--gold) }
+.hsub { color:var(--muted); font-size:.78rem; margin-top:3px }
+.sum { background:var(--goldA); border:1px solid rgba(212,169,76,.2); border-radius:9px;
+       padding:.6rem .9rem; text-align:center }
+.sum-v { font-family:'Libre Baskerville',serif; font-size:1.45rem; color:var(--gold); line-height:1 }
+.sum-l { font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-top:2px }
+
+/* TOOLBAR */
+.toolbar { background:var(--surf); border-bottom:1px solid var(--bdr);
+           padding:.5rem 0; position:sticky; top:0; z-index:200 }
+.btn-settings { background:var(--goldA); border:1px solid rgba(212,169,76,.3);
+  color:var(--gold); font-size:.74rem; font-weight:600; padding:5px 14px;
+  border-radius:6px; cursor:pointer; transition:all .2s; outline:none }
+.btn-settings:hover { background:rgba(212,169,76,.22) }
+.btn-reset { background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.2);
+  color:var(--red); font-size:.72rem; font-weight:600; padding:5px 12px;
+  border-radius:6px; cursor:pointer; transition:all .2s; outline:none }
+.btn-reset:hover { background:rgba(248,113,113,.15) }
+.tbadge { font-size:.71rem; font-weight:700; padding:3px 10px; border-radius:5px }
+.tok  { background:rgba(52,211,153,.1);  border:1px solid rgba(52,211,153,.25);  color:var(--ceil) }
+.twrn { background:rgba(245,158,11,.1);  border:1px solid rgba(245,158,11,.3);   color:var(--warn) }
+
+/* SETTINGS PANEL */
+.spanel { background:var(--surf); border-bottom:1px solid var(--bdr);
+          padding:1.1rem 0 1.4rem; display:none }
+.spanel.open { display:block }
+.sp-note { font-size:.71rem; color:var(--muted); margin-bottom:1rem;
+           background:rgba(212,169,76,.05); border:1px solid rgba(212,169,76,.15);
+           border-radius:7px; padding:8px 12px }
+.grp-lbl { font-size:.67rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+           color:var(--muted); margin-bottom:8px; padding-bottom:5px;
+           border-bottom:1px solid var(--bdr) }
+
+/* Weight row */
+.wr { display:flex; align-items:center; gap:8px; padding:5px 0;
+      border-bottom:1px solid rgba(255,255,255,.025) }
+.wr:last-child { border-bottom:none }
+.wr-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0 }
+.wr-lbl { font-size:.73rem; font-weight:500; min-width:160px; flex-shrink:0 }
+.wr-slider {
+  flex:1; -webkit-appearance:none; appearance:none; height:4px;
+  border-radius:2px; outline:none; cursor:pointer; border:none;
+  background:rgba(255,255,255,.08);
+}
+.wr-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  cursor:pointer; border:2px solid #0B0F15; transition:transform .15s; background:#ccc;
+}
+.wr-slider::-moz-range-thumb {
+  width:14px; height:14px; border-radius:50%;
+  cursor:pointer; border:2px solid #0B0F15; background:#ccc;
+}
+.wr-slider:hover::-webkit-slider-thumb { transform:scale(1.3) }
+.wr-num { width:26px; text-align:right; font-size:.8rem; font-weight:700; flex-shrink:0 }
+.wr-pct { font-size:.67rem; color:var(--muted); flex-shrink:0 }
+
+/* MAIN */
+.main { padding:1.2rem 0 3rem }
+
+/* Cards */
+.pc { background:var(--surf); border:1px solid var(--bdr); border-radius:12px;
+      padding:.88rem 1.1rem; margin-bottom:7px; cursor:pointer;
+      transition:border-color .2s, transform .2s; position:relative; overflow:hidden }
+.pc::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+              background:var(--gold); opacity:0; transition:opacity .2s }
+.pc:hover { border-color:rgba(212,169,76,.3); transform:translateX(3px) }
+.pc:hover::before, .pc.sel::before { opacity:.8 }
+.pc.sel { border-color:var(--gold); background:rgba(212,169,76,.03) }
+.r1 { border-color:rgba(212,169,76,.28) } .r1::before { opacity:.35 }
+.rn { font-family:'Libre Baskerville',serif; font-size:1.85rem; line-height:1;
+      color:rgba(212,169,76,.16); min-width:36px }
+.r1 .rn { color:var(--gold) }
+.r2 .rn, .r3 .rn { color:rgba(212,169,76,.42) }
+.pn { font-weight:600; font-size:.87rem }
+.pm { font-size:.68rem; color:var(--muted); margin-top:1px }
+.sb { min-width:52px; text-align:center; padding:4px 9px; border-radius:7px; font-weight:700; font-size:.9rem }
+.shi { background:linear-gradient(135deg,var(--gold),#7A5518); color:#0A0700 }
+.smd { background:rgba(212,169,76,.1); border:1px solid rgba(212,169,76,.25); color:var(--gold) }
+.slo { background:rgba(255,255,255,.04); border:1px solid var(--bdr); color:var(--muted) }
+
+/* Badges */
+.bt  { display:inline-flex; align-items:center; gap:3px; border-radius:4px;
+       padding:1px 6px; font-size:.65rem; font-weight:500 }
+.bv  { background:rgba(56,189,248,.1);  border:1px solid rgba(56,189,248,.25);  color:var(--view) }
+.bf  { background:rgba(251,146,60,.1);  border:1px solid rgba(251,146,60,.25);  color:var(--fire) }
+.bl1 { background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.3);  color:var(--lvl) }
+.bl2 { background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);  color:var(--red) }
+.bc  { background:rgba(52,211,153,.1);  border:1px solid rgba(52,211,153,.25);  color:var(--ceil) }
+.bk  { background:rgba(251,191,36,.1);  border:1px solid rgba(251,191,36,.25);  color:var(--kit) }
+.bb  { background:rgba(244,114,182,.1); border:1px solid rgba(244,114,182,.25); color:var(--bath) }
+.bp  { background:rgba(74,222,128,.1);  border:1px solid rgba(74,222,128,.3);   color:var(--price) }
+.bnw { background:rgba(52,211,153,.1);  border:1px solid rgba(52,211,153,.25);  color:var(--ceil) }
+.brs { background:rgba(96,165,250,.08); border:1px solid rgba(96,165,250,.2);   color:var(--blue) }
+.bg  { background:rgba(255,255,255,.04);border:1px solid var(--bdr);            color:var(--muted) }
+
+.mb  { height:3px; background:rgba(255,255,255,.05); border-radius:2px; margin-top:3px }
+.mbf { height:100%; border-radius:2px; transition:width .35s ease }
+
+/* Detail panel */
+.det { background:var(--surf); border:1px solid var(--bdr); border-radius:12px;
+       padding:1.25rem; position:sticky; top:55px; max-height:87vh; overflow-y:auto }
+.dt  { font-family:'Libre Baskerville',serif; font-size:1.1rem; font-weight:700; color:var(--gold) }
+.sg  { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin:.85rem 0 }
+.sbc { background:rgba(255,255,255,.02); border:1px solid var(--bdr); border-radius:7px; padding:6px 10px }
+.sbc-l { font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px }
+.sbc-v { font-size:.9rem; font-weight:600; margin-top:1px }
+.sr  { display:flex; justify-content:space-between; align-items:center;
+       padding:4px 0; border-bottom:1px solid rgba(255,255,255,.03) }
+.sr:last-child { border-bottom:none }
+.sr-l { font-size:.71rem; color:var(--muted) }
+.sr-v { font-weight:600; font-size:.77rem }
+.fb  { height:4px; background:rgba(255,255,255,.04); border-radius:3px; margin-top:3px }
+.fbf { height:100%; border-radius:3px; transition:width .55s ease }
+.ph  { text-align:center; padding:2.5rem 1rem; color:var(--muted) }
+.ph span { display:block; font-size:2rem; opacity:.14; margin-bottom:.6rem }
+.slbl { font-size:.63rem; font-weight:600; text-transform:uppercase;
+        letter-spacing:.6px; color:var(--muted); margin-bottom:4px }
+
+/* Rank-change flash */
+@keyframes flashUp   { 0%{background:rgba(52,211,153,.2)}  100%{background:transparent} }
+@keyframes flashDown { 0%{background:rgba(248,113,113,.18)} 100%{background:transparent} }
+.rup { animation:flashUp   .85s ease }
+.rdn { animation:flashDown .85s ease }
+
+/* -- DEFINITIONS MODAL -- */
+.modal-ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+  z-index:1000; align-items:center; justify-content:center; padding:1rem }
+.modal-ov.open { display:flex }
+.modal-box { background:#131920; border:1px solid rgba(212,169,76,.25); border-radius:14px;
+  max-width:800px; width:100%; max-height:88vh; overflow-y:auto; padding:1.8rem 2rem }
+.modal-box::-webkit-scrollbar { width:5px }
+.modal-box::-webkit-scrollbar-thumb { background:rgba(212,169,76,.25); border-radius:3px }
+.modal-close { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.25);
+  color:#F87171; font-size:.74rem; font-weight:600; padding:4px 12px; border-radius:6px;
+  cursor:pointer; float:right; margin-top:-2px; outline:none }
+.modal-close:hover { background:rgba(248,113,113,.22) }
+.def-sec { margin-bottom:1.5rem }
+.def-sec h3 { font-family:'Libre Baskerville',serif; font-size:.98rem; color:var(--gold);
+  margin-bottom:.7rem; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,.07) }
+.def-row { display:flex; gap:13px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.03) }
+.def-row:last-child { border-bottom:none }
+.def-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:5px }
+.def-name { font-size:.82rem; font-weight:600; color:var(--cream); margin-bottom:3px }
+.def-desc { font-size:.74rem; color:var(--muted); line-height:1.58 }
+.def-sc { display:inline-block; margin-top:4px; margin-right:4px; font-size:.68rem; font-weight:600;
+  padding:2px 7px; border-radius:4px; background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08); color:var(--cream) }
+.btn-defs { background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.22);
+  color:var(--view); font-size:.73rem; font-weight:600; padding:5px 13px;
+  border-radius:6px; cursor:pointer; transition:all .2s; outline:none }
+.btn-defs:hover { background:rgba(56,189,248,.16) }
+
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h1 class="htitle">The Benson's Wolf Ranch <em>Interactive Rankings</em></h1>
+        <p class="hsub">Georgetown TX 78628 &nbsp;·&nbsp; 13 Criteria &nbsp;·&nbsp; Adjust weights — rankings re-sort instantly</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <div class="sum"><div class="sum-v">12</div><div class="sum-l">Properties</div></div>
+        <div class="sum"><div class="sum-v">13</div><div class="sum-l">Criteria</div></div>
+        <div class="sum"><div class="sum-v">$435K</div><div class="sum-l">Lowest</div></div>
+        <div class="sum"><div class="sum-v">$550K</div><div class="sum-l">Highest</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="container d-flex align-items-center gap-2 flex-wrap">
+    <button class="btn-settings" id="btn-toggle" onclick="toggleSettings()">&#9881;&#65039; Adjust Weights</button>
+    <button class="btn-reset" onclick="resetWeights()">&#8635; Reset Defaults</button>
+    <button class="btn-defs" onclick="openDefs()">&#128218; Field Definitions</button>
+    <div class="d-flex align-items-center gap-2 ms-auto">
+      <span style="font-size:.68rem;color:var(--muted)">Weights total:</span>
+      <span class="tbadge tok" id="tbadge">100%</span>
+      <span style="font-size:.67rem;color:var(--ceil)" id="thint">&#10003; Perfect</span>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="spanel" id="spanel">
+  <div class="container">
+    <div class="sp-note">
+      <strong>Drag sliders</strong> to change each criterion's weight (0&#8211;30%).
+      Rankings update live. Keep the <strong>Weights Total</strong> at 100% for accurate scoring.
+      <strong>Reset Defaults</strong> restores the original configuration.
+      Mini bars on each card track the 3 highest-weighted criteria.
+    </div>
+    <div class="row g-3" id="sliders-root"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div style="font-size:.69rem;color:var(--muted);margin-bottom:.65rem;line-height:1.7">
+          <span style="color:var(--red)">View exclusion:</span> None / Neighborhood / See Remarks = 0 pts
+          &nbsp;&middot;&nbsp;
+          <span style="color:var(--lvl)">Levels:</span> 1-story = 10 pts, 2-story = 0
+          &nbsp;&middot;&nbsp;
+          <span style="color:var(--ceil)">Ceilings:</span> Vaulted/Cathedral = 10, High/Tray/Beamed = 7, Standard = 0
+        </div>
+        <div id="cards"></div>
+      </div>
+      <div class="col-lg-5">
+        <div class="det" id="det">
+          <div class="ph">
+            <span>&#127968;</span>
+            Click any property card to see its full 13-criteria score breakdown
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   PROPERTY DATA  (s_* scores are pre-computed 0-10)
+   Composite total is calculated live from current weights.
+========================================================= */
+var RAW = [
+  { id:1,  addr:"1104 River Vista Rd",    beds:3, baths:2, garage:2, price:435000, sqft:2106, year:2020, lot:6543,
+    condition:"Resale",          ppsf:206.55, fireplace:false, view_qual:true,  view_desc:"Park/Greenbelt",
+    levels:1, flooring:"Carpet, Tile",           materials:"Siding-Wood, Stone",                        ceil_type:"Standard",
+    s_ppsf:8.14, s_space:1.59, s_age:3.33, s_lot:1.39, s_rooms:3.33,
+    s_mat:6,  s_floor:4,  s_fire:0,  s_view:10, s_lvl:10, s_ceil:0,  s_kit:4,  s_bath:7 },
+
+  { id:2,  addr:"205 Belford St",          beds:3, baths:2, garage:2, price:470000, sqft:2076, year:2018, lot:6534,
+    condition:"Resale",          ppsf:226.40, fireplace:false, view_qual:false, view_desc:"Neighborhood (excl.)",
+    levels:1, flooring:"Carpet, Tile",           materials:"Brick, Stucco",                             ceil_type:"High Ceilings",
+    s_ppsf:5.93, s_space:1.28, s_age:1.11, s_lot:1.38, s_rooms:3.33,
+    s_mat:8,  s_floor:4,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:7,  s_kit:8,  s_bath:7 },
+
+  { id:3,  addr:"4024 Mercer Rd",          beds:3, baths:2, garage:2, price:488000, sqft:2212, year:2017, lot:6534,
+    condition:"Resale",          ppsf:220.61, fireplace:true,  view_qual:false, view_desc:"Neighborhood (excl.)",
+    levels:1, flooring:"Carpet, Tile, Wood",     materials:"Brick, Stone",                              ceil_type:"High Ceilings",
+    s_ppsf:6.57, s_space:2.72, s_age:0.00, s_lot:1.38, s_rooms:3.33,
+    s_mat:9,  s_floor:7,  s_fire:10, s_view:0,  s_lvl:10, s_ceil:7,  s_kit:6,  s_bath:3 },
+
+  { id:4,  addr:"225 Diamondback Dr",      beds:4, baths:3, garage:2, price:490000, sqft:2122, year:2020, lot:6059,
+    condition:"Resale",          ppsf:230.91, fireplace:false, view_qual:false, view_desc:"None",
+    levels:1, flooring:"Carpet, Laminate, Tile", materials:"Brick",                                     ceil_type:"High Ceilings",
+    s_ppsf:5.42, s_space:1.76, s_age:3.33, s_lot:0.63, s_rooms:10.0,
+    s_mat:7,  s_floor:3,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:7,  s_kit:2,  s_bath:3 },
+
+  { id:5,  addr:"1122 Silver Dollar Trl",  beds:2, baths:2, garage:2, price:515000, sqft:2035, year:2022, lot:7396,
+    condition:"Resale",          ppsf:253.07, fireplace:false, view_qual:true,  view_desc:"Park/Greenbelt, Trees/Woods",
+    levels:1, flooring:"No Carpet, Tile, Wood",  materials:"Brick, Stucco",                             ceil_type:"Coffered Ceiling",
+    s_ppsf:2.96, s_space:0.84, s_age:5.56, s_lot:2.74, s_rooms:0.00,
+    s_mat:8,  s_floor:10, s_fire:0,  s_view:10, s_lvl:10, s_ceil:7,  s_kit:8,  s_bath:7 },
+
+  { id:6,  addr:"604 Pecan Bottom Trl",    beds:3, baths:2, garage:2, price:515000, sqft:2568, year:2020, lot:11979,
+    condition:"Resale",          ppsf:200.55, fireplace:true,  view_qual:false, view_desc:"None",
+    levels:2, flooring:"Carpet, Tile",           materials:"Brick Veneer, Masonry, Stone Veneer",       ceil_type:"Vaulted / High Ceilings",
+    s_ppsf:8.80, s_space:6.50, s_age:3.33, s_lot:10.0, s_rooms:3.33,
+    s_mat:9,  s_floor:4,  s_fire:10, s_view:0,  s_lvl:0,  s_ceil:10, s_kit:4,  s_bath:7 },
+
+  { id:7,  addr:"1136 Stetson Hat Trl",    beds:4, baths:3, garage:3, price:539000, sqft:2451, year:2020, lot:6891,
+    condition:"Resale",          ppsf:219.91, fireplace:false, view_qual:false, view_desc:"None",
+    levels:1, flooring:"Carpet, Tile",           materials:"Brick Veneer, Masonry, Stone Veneer, Stucco", ceil_type:"High / Tray Ceilings",
+    s_ppsf:6.65, s_space:5.26, s_age:3.33, s_lot:1.94, s_rooms:10.0,
+    s_mat:9,  s_floor:4,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:7,  s_kit:10, s_bath:10 },
+
+  { id:8,  addr:"712 Sunset Vista Dr",     beds:3, baths:2, garage:2, price:539900, sqft:2279, year:2021, lot:7431,
+    condition:"Resale",          ppsf:236.90, fireplace:true,  view_qual:false, view_desc:"None",
+    levels:1, flooring:"Carpet, Tile, Wood",     materials:"Stone, Stucco",                             ceil_type:"Beamed / Cathedral Ceilings",
+    s_ppsf:4.76, s_space:3.43, s_age:4.44, s_lot:2.80, s_rooms:3.33,
+    s_mat:8,  s_floor:7,  s_fire:10, s_view:0,  s_lvl:10, s_ceil:10, s_kit:8,  s_bath:7 },
+
+  { id:9,  addr:"508 High Summit Dr",      beds:3, baths:2, garage:2, price:549699, sqft:1966, year:2026, lot:10454,
+    condition:"New Construction", ppsf:279.60, fireplace:false, view_qual:false, view_desc:"None",
+    levels:1, flooring:"Carpet, Tile, Wood",     materials:"Masonry-All Sides",                         ceil_type:"Standard",
+    s_ppsf:0.00, s_space:0.11, s_age:10.0, s_lot:7.59, s_rooms:3.33,
+    s_mat:10, s_floor:7,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:0,  s_kit:2,  s_bath:3 },
+
+  { id:10, addr:"1113 Spring Gulch Ln",    beds:4, baths:3, garage:2, price:549900, sqft:2897, year:2024, lot:6229,
+    condition:"Resale",          ppsf:189.82, fireplace:true,  view_qual:true,  view_desc:"City View",
+    levels:2, flooring:"Carpet, Tile, Wood",     materials:"Brick, Masonry-All Sides",                  ceil_type:"High Ceilings",
+    s_ppsf:10.0, s_space:10.0, s_age:7.78, s_lot:0.90, s_rooms:10.0,
+    s_mat:10, s_floor:7,  s_fire:10, s_view:10, s_lvl:0,  s_ceil:7,  s_kit:6,  s_bath:3 },
+
+  /* ── NEW PROPERTIES (added Mar 2026) ── */
+  { id:11, addr:"120 Fox Run",             beds:4, baths:3, garage:2, price:499000, sqft:1956, year:2026, lot:5663,
+    condition:"New Construction", ppsf:255.11, fireplace:false, view_qual:false, view_desc:"None",
+    levels:1, flooring:"Tile, Wood",             materials:"Masonry-All Sides",                         ceil_type:"Standard",
+    s_ppsf:2.73, s_space:0.00, s_age:10.0, s_lot:0.00, s_rooms:10.0,
+    s_mat:10, s_floor:7,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:0,  s_kit:2,  s_bath:7 },
+
+  { id:12, addr:"221 Lone Ranger Trl",     beds:3, baths:2, garage:2, price:524900, sqft:2014, year:2023, lot:7532,
+    condition:"Resale",          ppsf:260.63, fireplace:false, view_qual:false, view_desc:"Neighborhood (excl.)",
+    levels:1, flooring:"Concrete",               materials:"Concrete",                                  ceil_type:"Vaulted Ceilings",
+    s_ppsf:2.11, s_space:0.62, s_age:6.67, s_lot:2.96, s_rooms:3.33,
+    s_mat:5,  s_floor:3,  s_fire:0,  s_view:0,  s_lvl:10, s_ceil:10, s_kit:4,  s_bath:3 }
+];
+
+/* =========================================================
+   CRITERIA CONFIGNFIG  — defaultWt values MUST sum to 100
+========================================================= */
+var CRIT = [
+  /* -- Affordability -- */
+  { key:'s_ppsf',  lbl:'List $/SF',              defaultWt:15, color:'#D4A94C', note:'Lower $/SF = score 10',          group:'afford' },
+  /* -- Property & Location -- */
+  { key:'s_space', lbl:'Living Area',             defaultWt:5,  color:'#60A5FA', note:'Larger SqFt = higher score',     group:'prop'   },
+  { key:'s_age',   lbl:'Year Built',              defaultWt:5,  color:'#34D399', note:'Newer = higher score',           group:'prop'   },
+  { key:'s_lot',   lbl:'Lot Size',                defaultWt:4,  color:'#E879F9', note:'Larger lot = higher score',      group:'prop'   },
+  { key:'s_rooms', lbl:'Beds + Baths',            defaultWt:3,  color:'#FBBF24', note:'More = higher score',            group:'prop'   },
+  { key:'s_mat',   lbl:'Construction Material',   defaultWt:4,  color:'#F97316', note:'Masonry-All Sides = 10',         group:'prop'   },
+  { key:'s_floor', lbl:'Flooring Quality',        defaultWt:8,  color:'#818CF8', note:'No Carpet + Wood = 10',          group:'prop'   },
+  { key:'s_fire',  lbl:'Fireplace',               defaultWt:1,  color:'#FB923C', note:'Present = 10, absent = 0',       group:'prop'   },
+  { key:'s_view',  lbl:'View Quality',            defaultWt:15, color:'#38BDF8', note:'Park/City/Trees = 10, else = 0', group:'prop'   },
+  { key:'s_lvl',   lbl:'Single-Story (Levels)',   defaultWt:22, color:'#A78BFA', note:'1-story = 10, 2-story = 0',      group:'prop'   },
+  /* -- Interior Upgrades -- */
+  { key:'s_ceil',  lbl:'High / Vaulted Ceilings', defaultWt:4,  color:'#34D399', note:'Vaulted=10, High=7, Std=0',      group:'int'    },
+  { key:'s_kit',   lbl:'Upgraded Kitchen',        defaultWt:8,  color:'#FBBF24', note:'5 upgrade indicators scored',    group:'int'    },
+  { key:'s_bath',  lbl:'Upgraded Master Bath',    defaultWt:6,  color:'#F472B6', note:'3 upgrade indicators scored',    group:'int'    }
+]; /* weights total = 100 */
+
+/* =========================================================
+   LIVE STATE
+========================================================= */
+var W = {};
+var selectedId = null;
+var lastScored = [];
+
+function initW() {
+  for (var i = 0; i < CRIT.length; i++) {
+    W[CRIT[i].key] = CRIT[i].defaultWt;
+  }
+}
+initW();
+
+/* =========================================================
+   SCORING ENGINE
+========================================================= */
+function doScore() {
+  var wtTotal = 0;
+  for (var i = 0; i < CRIT.length; i++) wtTotal += W[CRIT[i].key];
+
+  var scored = RAW.map(function(p) {
+    var total = 0;
+    for (var i = 0; i < CRIT.length; i++) {
+      total += p[CRIT[i].key] * W[CRIT[i].key] / 100;
+    }
+    var copy = {};
+    for (var k in p) copy[k] = p[k];
+    copy.total   = Math.round(total * 100) / 100;
+    copy.wtTotal = wtTotal;
+    return copy;
+  });
+
+  scored.sort(function(a, b) { return b.total - a.total; });
+  for (var j = 0; j < scored.length; j++) scored[j].rank = j + 1;
+  lastScored = scored;
+  return scored;
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function sc(s)  { return s >= 6.5 ? 'shi' : s >= 4.5 ? 'smd' : 'slo'; }
+function fmt(n) { return '$' + n.toLocaleString(); }
+
+function condB(c) {
+  return c === 'New Construction'
+    ? '<span class="bt bnw">New</span>'
+    : '<span class="bt brs">Resale</span>';
+}
+
+function ceilBdg(s) {
+  if (s === 10) return '<span class="bt bc">&#10022; Vaulted</span>';
+  if (s === 7)  return '<span class="bt bc" style="opacity:.72">&#10022; High Ceil</span>';
+  return '';
+}
+
+function setFill(el, color, pct) {
+  el.style.background = 'linear-gradient(to right,' + color + ' ' + pct + '%,rgba(255,255,255,.08) ' + pct + '%)';
+}
+
+/* =========================================================
+   RENDER CARDS
+========================================================= */
+function renderCards(props) {
+  var container = document.getElementById('cards');
+
+  // snapshot previous ranks for animation
+  var oldRanks = {};
+  var existing = container.querySelectorAll('.pc[data-id]');
+  for (var e = 0; e < existing.length; e++) {
+    oldRanks[existing[e].dataset.id] = parseInt(existing[e].dataset.rank, 10);
+  }
+  container.innerHTML = '';
+
+  // top-3 criteria by weight for mini bars
+  var sorted3 = CRIT.slice().sort(function(a,b){ return W[b.key] - W[a.key]; });
+  var top3 = sorted3.slice(0, 3);
+
+  for (var i = 0; i < props.length; i++) {
+    var p = props[i];
+    var el = document.createElement('div');
+
+    var prev = oldRanks[String(p.id)];
+    var anim = '';
+    if (prev !== undefined && prev !== p.rank) {
+      anim = (p.rank < prev) ? ' rup' : ' rdn';
+    }
+
+    el.className = 'pc r' + p.rank + (p.id === selectedId ? ' sel' : '') + anim;
+    el.dataset.id   = p.id;
+    el.dataset.rank = p.rank;
+
+    (function(pid) {
+      el.onclick = function() {
+        selectedId = pid;
+        renderCards(lastScored);
+        showDet(pid);
+      };
+    })(p.id);
+
+    var bars = '';
+    for (var b = 0; b < top3.length; b++) {
+      var cr = top3[b];
+      bars += '<div class="col-4">'
+        + '<div style="font-size:.57rem;color:var(--muted)">' + cr.lbl.split(' ')[0] + '</div>'
+        + '<div class="mb"><div class="mbf" style="width:' + (p[cr.key]*10) + '%;background:' + cr.color + '"></div></div>'
+        + '</div>';
+    }
+
+    var badges = condB(p.condition)
+      + '<span class="bt bg">' + fmt(p.price) + '</span>'
+      + '<span class="bt bg">$' + p.ppsf + '/sf</span>'
+      + (p.view_qual  ? '<span class="bt bv">&#128065; ' + p.view_desc + '</span>' : '')
+      + (p.fireplace  ? '<span class="bt bf">&#128293; Fire</span>' : '')
+      + (p.levels===1 ? '<span class="bt bl1">&#127968; 1-Story</span>' : '<span class="bt bl2">2-Story</span>')
+      + ceilBdg(p.s_ceil)
+      + (p.s_kit  >= 8 ? '<span class="bt bk">&#127859; Upgraded Kit</span>' : '')
+      + (p.s_bath >= 8 ? '<span class="bt bb">&#128705; Upgraded Bath</span>' : '')
+;
+
+    el.innerHTML =
+      '<div class="d-flex gap-3 align-items-center">'
+      + '<div class="rn">' + p.rank + '</div>'
+      + '<div class="flex-grow-1">'
+        + '<div class="d-flex justify-content-between align-items-start">'
+          + '<div>'
+            + '<div class="pn">' + p.addr + '</div>'
+            + '<div class="pm">' + p.beds + 'bd &middot; ' + p.baths + 'ba &middot; ' + p.garage + 'gar &middot; ' + p.sqft.toLocaleString() + ' sqft &middot; ' + p.year + '</div>'
+          + '</div>'
+          + '<div class="sb ' + sc(p.total) + '">' + p.total.toFixed(2) + '</div>'
+        + '</div>'
+        + '<div class="d-flex gap-1 flex-wrap mt-2">' + badges + '</div>'
+        + '<div class="row g-1 mt-1">' + bars + '</div>'
+      + '</div>'
+      + '</div>';
+
+    container.appendChild(el);
+  }
+}
+
+/* =========================================================
+   DETAIL PANEL
+========================================================= */
+function showDet(id) {
+  var p = null;
+  for (var i = 0; i < lastScored.length; i++) {
+    if (lastScored[i].id === id) { p = lastScored[i]; break; }
+  }
+  if (!p) return;
+
+  var groupDefs = [
+    { lbl:'&#128178; Affordability',       keys: CRIT.filter(function(c){ return c.group==='afford'; }) },
+    { lbl:'&#127968; Property &amp; Location', keys: CRIT.filter(function(c){ return c.group==='prop';   }) },
+    { lbl:'&#127968; Interior Upgrades',   keys: CRIT.filter(function(c){ return c.group==='int';    }) }
+  ];
+
+  var groupHtml = '';
+  for (var g = 0; g < groupDefs.length; g++) {
+    groupHtml += '<div class="slbl mt-3">' + groupDefs[g].lbl + '</div>';
+    for (var k = 0; k < groupDefs[g].keys.length; k++) {
+      groupHtml += scoreRow(p, groupDefs[g].keys[k]);
+    }
+  }
+
+  var lvlBadge = p.levels === 1
+    ? '<span class="bt bl1">&#127968; 1-Story (+' + W.s_lvl + '%)</span>'
+    : '<span class="bt bl2">2-Story (0 pts &mdash; ' + W.s_lvl + '% criterion)</span>';
+
+  document.getElementById('det').innerHTML =
+    '<div class="d-flex justify-content-between align-items-start mb-2">'
+      + '<div>'
+        + '<div class="dt">#' + p.rank + ' &middot; ' + p.addr + '</div>'
+        + '<div style="font-size:.68rem;color:var(--muted)">' + condB(p.condition) + ' Georgetown TX &middot; Wolf Ranch</div>'
+      + '</div>'
+      + '<div class="sb ' + sc(p.total) + '" style="font-size:1.1rem;padding:6px 12px">' + p.total.toFixed(2) + '</div>'
+    + '</div>'
+
+    + '<div class="d-flex gap-1 flex-wrap mb-3">'
+      + (p.view_qual
+          ? '<span class="bt bv">&#128065; ' + p.view_desc + '</span>'
+          : '<span style="font-size:.65rem;color:var(--red)">&#10005; No qualifying view</span>')
+      + (p.fireplace ? '<span class="bt bf">&#128293; Fireplace</span>' : '')
+      + lvlBadge
+      + ceilBdg(p.s_ceil)
+    + '</div>'
+
+    + '<div class="sg">'
+      + '<div class="sbc"><div class="sbc-l">List Price</div><div class="sbc-v" style="color:var(--price)">' + fmt(p.price) + '</div></div>'
+      + '<div class="sbc"><div class="sbc-l">List $/SF</div><div class="sbc-v" style="color:var(--gold)">$' + p.ppsf + '</div></div>'
+      + '<div class="sbc"><div class="sbc-l">Living Area</div><div class="sbc-v">' + p.sqft.toLocaleString() + ' sf</div></div>'
+      + '<div class="sbc"><div class="sbc-l">Lot Size</div><div class="sbc-v">' + p.lot.toLocaleString() + ' sf</div></div>'
+      + '<div class="sbc"><div class="sbc-l">Year Built</div><div class="sbc-v">' + p.year + '</div></div>'
+      + '<div class="sbc"><div class="sbc-l">Beds / Baths / Gar</div><div class="sbc-v">' + p.beds + ' / ' + p.baths + ' / ' + p.garage + '</div></div>'
+    + '</div>'
+
+    + '<div style="font-size:.69rem;color:var(--muted);margin-bottom:2px">Materials: <span style="color:var(--cream)">' + p.materials + '</span></div>'
+    + '<div style="font-size:.69rem;color:var(--muted);margin-bottom:2px">Flooring: <span style="color:var(--cream)">' + p.flooring + '</span></div>'
+    + '<div style="font-size:.69rem;color:var(--muted);margin-bottom:.9rem">Ceilings: <span style="color:var(--cream)">' + p.ceil_type + '</span></div>'
+
+    + groupHtml
+
+    + '<div class="mt-3 p-3" style="background:var(--goldA);border:1px solid rgba(212,169,76,.18);border-radius:8px">'
+      + '<div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Composite Score (weights total ' + p.wtTotal + '%)</div>'
+      + '<div style="font-family:\'Libre Baskerville\',serif;font-size:1.75rem;font-weight:700;color:var(--gold)">'
+        + p.total.toFixed(2)
+        + '<span style="font-size:.7rem;font-family:\'Manrope\',sans-serif;color:var(--muted)"> / 10.00</span>'
+      + '</div>'
+      + '<div style="height:7px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;margin-top:5px">'
+        + '<div style="height:100%;width:' + (p.total*10) + '%;background:linear-gradient(90deg,var(--gold),#F0D98C);border-radius:4px;transition:width .5s"></div>'
+      + '</div>'
+    + '</div>';
+}
+
+function scoreRow(p, cr) {
+  var wt      = W[cr.key];
+  var val     = p[cr.key];
+  var contrib = (val * wt / 100).toFixed(2);
+  return '<div class="sr">'
+    + '<div class="flex-grow-1">'
+      + '<div class="sr-l">' + cr.lbl
+        + ' <span style="font-size:.58rem;opacity:.38">(' + wt + '%)</span>'
+        + (cr.note ? ' <span style="font-size:.57rem;color:' + cr.color + ';opacity:.52">&mdash; ' + cr.note + '</span>' : '')
+      + '</div>'
+      + '<div class="fb"><div class="fbf" style="width:' + (val*10) + '%;background:' + cr.color + '"></div></div>'
+    + '</div>'
+    + '<div class="d-flex flex-column align-items-end ms-2">'
+      + '<div class="sr-v" style="color:' + cr.color + '">' + val.toFixed(1) + '</div>'
+      + '<div style="font-size:.57rem;color:var(--muted)">+' + contrib + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+/* =========================================================
+   SLIDERS
+========================================================= */
+function buildSliders() {
+  var root = document.getElementById('sliders-root');
+  root.innerHTML = '';
+
+  var groups = [
+    { lbl:'&#128178; Affordability',        crits: CRIT.filter(function(c){ return c.group==='afford'; }) },
+    { lbl:'&#127968; Property &amp; Location', crits: CRIT.filter(function(c){ return c.group==='prop';   }) },
+    { lbl:'&#127968; Interior Upgrades',    crits: CRIT.filter(function(c){ return c.group==='int';    }) }
+  ];
+
+  for (var g = 0; g < groups.length; g++) {
+    var col = document.createElement('div');
+    col.className = 'col-lg-4 col-md-6';
+
+    var html = '<div class="grp-lbl">' + groups[g].lbl + '</div>';
+    for (var i = 0; i < groups[g].crits.length; i++) {
+      var cr = groups[g].crits[i];
+      html += '<div class="wr">'
+        + '<div class="wr-dot" style="background:' + cr.color + '"></div>'
+        + '<div class="wr-lbl">' + cr.lbl + '</div>'
+        + '<input type="range" class="wr-slider" id="sl-' + cr.key + '"'
+          + ' min="0" max="30" step="1" value="' + W[cr.key] + '"'
+          + ' data-key="' + cr.key + '" data-color="' + cr.color + '"'
+          + ' oninput="onSlider(this.dataset.key,parseInt(this.value),this.dataset.color,this)">'
+        + '<div class="wr-num" id="wv-' + cr.key + '" style="color:' + cr.color + '">' + W[cr.key] + '</div>'
+        + '<div class="wr-pct">%</div>'
+        + '</div>';
+    }
+    col.innerHTML = html;
+    root.appendChild(col);
+  }
+
+  // Set initial track fills
+  for (var c = 0; c < CRIT.length; c++) {
+    var sl = document.getElementById('sl-' + CRIT[c].key);
+    if (sl) setFill(sl, CRIT[c].color, W[CRIT[c].key] / 30 * 100);
+  }
+}
+
+function onSlider(key, val, color, el) {
+  W[key] = val;
+
+  var numEl = document.getElementById('wv-' + key);
+  if (numEl) numEl.textContent = val;
+  setFill(el, color, val / 30 * 100);
+
+  updateBadge();
+  var scored = doScore();
+  renderCards(scored);
+  if (selectedId) showDet(selectedId);
+}
+
+function updateBadge() {
+  var total = 0;
+  for (var i = 0; i < CRIT.length; i++) total += W[CRIT[i].key];
+
+  var badge = document.getElementById('tbadge');
+  var hint  = document.getElementById('thint');
+  badge.textContent = total + '%';
+
+  if (total === 100) {
+    badge.className   = 'tbadge tok';
+    hint.textContent  = '&#10003; Perfect';
+    hint.style.color  = 'var(--ceil)';
+  } else {
+    badge.className  = 'tbadge twrn';
+    var d = total - 100;
+    hint.textContent = d > 0 ? '&#9650; ' + d + '% over' : '&#9660; ' + Math.abs(d) + '% under';
+    hint.style.color = 'var(--warn)';
+  }
+}
+
+/* =========================================================
+   TOGGLE & RESET
+========================================================= */
+function toggleSettings() {
+  var panel = document.getElementById('spanel');
+  var btn   = document.getElementById('btn-toggle');
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.textContent = '\u2699\uFE0F Adjust Weights';
+  } else {
+    buildSliders();
+    panel.classList.add('open');
+    btn.textContent = '\u2715 Close Weights';
+  }
+}
+
+function resetWeights() {
+  initW();
+  if (document.getElementById('spanel').classList.contains('open')) buildSliders();
+  updateBadge();
+  var scored = doScore();
+  renderCards(scored);
+  if (selectedId) showDet(selectedId);
+}
+
+/* =========================================================
+   BOOT
+========================================================= */
+updateBadge();
+renderCards(doScore());
+
+/* -- DEFINITIONS MODAL -- */
+function openDefs() {
+  document.getElementById('def-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDefs() {
+  document.getElementById('def-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeDefsOnBg(e) {
+  if (e.target === document.getElementById('def-modal')) closeDefs();
+}
+
+</script>
+
+<!-- DEFINITIONS MODAL -->
+<div class="modal-ov" id="def-modal" onclick="closeDefsOnBg(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeDefs()">&#10005; Close</button>
+    <h2 style="font-family:'Libre Baskerville',serif;font-size:1.3rem;color:var(--gold);margin-bottom:.25rem">
+      Scoring Field Definitions
+    </h2>
+    <p style="font-size:.73rem;color:var(--muted);margin-bottom:1.3rem;clear:both">
+      All 13 criteria are normalized 0&ndash;10 against the 12 Wolf Ranch properties in this dataset.
+      Weights (%) set the contribution of each field to the composite score. Raw MLS data: NTREIS.
+    </p>
+
+    <!-- AFFORDABILITY -->
+    <div class="def-sec">
+      <h3>&#128178; Affordability</h3>
+      <div class="def-row">
+        <div class="def-dot" style="background:#D4A94C"></div>
+        <div>
+          <div class="def-name">List $/SF <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default weight: 15%</span></div>
+          <div class="def-desc">MLS List Price &divide; Living Area (SqFt). Measures cost per square foot of living space.
+            Lowest $/SF = score 10; highest = score 0. Rewards getting the most space for your dollar.</div>
+          <span class="def-sc">$189.82/sf &rarr; score 10</span>
+          <span class="def-sc">$279.60/sf &rarr; score 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTY & LOCATION -->
+    <div class="def-sec">
+      <h3>&#127968; Property &amp; Location</h3>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#60A5FA"></div>
+        <div>
+          <div class="def-name">Living Area <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 5%</span></div>
+          <div class="def-desc">Total finished interior SqFt from MLS. Larger homes score higher.
+            Smallest (1,966 sf) = 0; largest (2,897 sf) = 10.</div>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#34D399"></div>
+        <div>
+          <div class="def-name">Year Built <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 5%</span></div>
+          <div class="def-desc">Year of construction per MLS. Newer = higher score. Rewards lower maintenance risk,
+            modern codes, updated systems. New Construction 2026 = score 10; oldest (2017) = score 0.</div>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#E879F9"></div>
+        <div>
+          <div class="def-name">Lot Size <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 4%</span></div>
+          <div class="def-desc">Total lot area in SqFt from MLS. Larger lots score higher &mdash; rewards yard space,
+            privacy, and resale potential. 604 Pecan Bottom Trl = 11,979 sf (score 10); smallest = 6,059 sf (score 0).</div>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#FBBF24"></div>
+        <div>
+          <div class="def-name">Beds + Baths <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 3%</span></div>
+          <div class="def-desc">Sum of bedroom + full bathroom count from MLS. More rooms = higher score.
+            Sum of 7 (4 bed / 3 bath) = score 10; sum of 4 (2 bed / 2 bath) = score 0.</div>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#F97316"></div>
+        <div>
+          <div class="def-name">Construction Material <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 4%</span></div>
+          <div class="def-desc">Exterior material from MLS "Construction" field. Scored on a fixed quality scale
+            based on durability, maintenance cost, and resale value.</div>
+          <span class="def-sc">10 &mdash; Masonry-All Sides / Brick + Masonry</span>
+          <span class="def-sc">9 &mdash; Brick Veneer + Masonry + Stone Veneer</span>
+          <span class="def-sc">8 &mdash; Brick + Stucco / Stone + Stucco</span>
+          <span class="def-sc">7 &mdash; Brick only</span>
+          <span class="def-sc">6 &mdash; Siding-Wood + Stone</span>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#818CF8"></div>
+        <div>
+          <div class="def-name">Flooring Quality <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 8%</span></div>
+          <div class="def-desc">From MLS "Flooring" field. Rewards hard-surface flooring; penalizes carpet
+            (maintenance, allergens, resale) and laminate (lower durability).</div>
+          <span class="def-sc">10 &mdash; No Carpet, Tile, Wood</span>
+          <span class="def-sc">7 &mdash; Carpet, Tile, Wood</span>
+          <span class="def-sc">4 &mdash; Carpet, Tile only</span>
+          <span class="def-sc">3 &mdash; Carpet, Laminate, Tile</span>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#FB923C"></div>
+        <div>
+          <div class="def-name">Fireplace <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 1%</span></div>
+          <div class="def-desc">Binary yes/no from MLS. Low weight reflects it is a comfort amenity rather than a
+            structural or value driver. Fireplace present = 10; absent = 0.</div>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#38BDF8"></div>
+        <div>
+          <div class="def-name">View Quality <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 15%</span></div>
+          <div class="def-desc">From MLS "View" field. Only meaningful views qualify. Generic views ("Neighborhood",
+            "See Remarks") receive 0 &mdash; they describe standard suburban sightlines with no premium value.</div>
+          <span class="def-sc">10 &mdash; Park/Greenbelt, City View, Trees/Woods</span>
+          <span class="def-sc">0 &mdash; None, Neighborhood, See Remarks</span>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#A78BFA"></div>
+        <div>
+          <div class="def-name">Single-Story (Levels) <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 22%</span></div>
+          <div class="def-desc">From MLS "Levels" field. One-story homes score 10 &mdash; easier accessibility, no
+            stair noise between floors, simpler roof structure, and generally preferred in Georgetown TX's
+            active-adult market. Two-story = 0. Highest-weighted criterion by default.</div>
+          <span class="def-sc">1-Story = 10</span>
+          <span class="def-sc">2-Story = 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERIOR UPGRADES -->
+    <div class="def-sec">
+      <h3>&#128081; Interior Upgrades</h3>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#34D399"></div>
+        <div>
+          <div class="def-name">High / Vaulted Ceilings <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 4%</span></div>
+          <div class="def-desc">Scored from MLS "Interior Features" keywords. Vaulted and cathedral ceilings score
+            highest (greatest openness). High, tray, beamed, coffered are a step below.</div>
+          <span class="def-sc">10 &mdash; Vaulted, Cathedral</span>
+          <span class="def-sc">7 &mdash; High, Beamed, Tray, Coffered</span>
+          <span class="def-sc">0 &mdash; Standard / not listed</span>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#FBBF24"></div>
+        <div>
+          <div class="def-name">Upgraded Kitchen <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 8%</span></div>
+          <div class="def-desc">Counts upgrade indicators in MLS "Interior Features" (up to 5, each worth 2 pts).
+            Kitchen is the highest-ROI room for both daily livability and resale value.</div>
+          <span class="def-sc">+2 pts &mdash; Quartz Counters</span>
+          <span class="def-sc">+2 pts &mdash; Granite Counters</span>
+          <span class="def-sc">+2 pts &mdash; Kitchen Island</span>
+          <span class="def-sc">+2 pts &mdash; Recessed Lighting</span>
+          <span class="def-sc">+2 pts &mdash; Breakfast Bar</span>
+        </div>
+      </div>
+
+      <div class="def-row">
+        <div class="def-dot" style="background:#F472B6"></div>
+        <div>
+          <div class="def-name">Upgraded Master Bath <span style="font-size:.67rem;color:var(--muted);font-weight:400">Default: 6%</span></div>
+          <div class="def-desc">Counts upgrade indicators in MLS "Interior Features" (up to 3, each worth ~3.3 pts).
+            Primary bath quality directly affects daily comfort and resale value.</div>
+          <span class="def-sc">+3.3 pts &mdash; Soaking Tub</span>
+          <span class="def-sc">+3.3 pts &mdash; Double Vanity</span>
+          <span class="def-sc">+3.3 pts &mdash; Walk-In Closet</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- METHODOLOGY -->
+    <div class="def-sec" style="margin-bottom:0">
+      <h3>&#128208; Scoring Methodology</h3>
+      <p style="font-size:.75rem;color:var(--muted);line-height:1.65;margin-bottom:.6rem">
+        Each criterion is normalized to a <strong style="color:var(--cream)">0&ndash;10 scale</strong> across the 10 properties.
+        Continuous variables use linear normalization: <em>score = (value &minus; min) / (max &minus; min) &times; 10</em>,
+        inverted for "lower is better" criteria. Binary criteria score 0 or 10. Tiered criteria use fixed lookup tables above.
+      </p>
+      <p style="font-size:.75rem;color:var(--muted);line-height:1.65;margin:0">
+        <strong style="color:var(--cream)">Composite Score</strong> = &Sigma;(criterion score &times; weight%) / 100.
+        When all weights sum to 100%, the composite stays on the 0&ndash;10 scale.
+        Use <strong style="color:var(--gold)">&#9881; Adjust Weights</strong> to reprioritize criteria to your preferences.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
